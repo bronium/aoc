@@ -21,52 +21,29 @@ var Directions = map[rune]Point{
 
 var dog = Point{}
 
-func (matrix *Matrix) move(direction rune) {
-	delta := Directions[direction]
-	nextPos := Point{dog.x + delta.x, dog.y + delta.y}
-
-	nextValue := (*matrix)[nextPos.y][nextPos.x]
-	if nextValue == '#' {
-		return
-	}
-
-	if nextValue == '.' {
-		(*matrix)[dog.y][dog.x] = '.'
-		dog = nextPos
-		(*matrix)[dog.y][dog.x] = '@'
-		return
-	}
-
-	if nextValue == 'O' {
-		if matrix.moveBox(nextPos, direction) {
-			(*matrix)[dog.y][dog.x] = '.'
-			dog = nextPos
-			(*matrix)[dog.y][dog.x] = '@'
-		}
-		return
-	}
-}
-
-func (matrix *Matrix) moveBox(coord Point, direction rune) bool {
+func (matrix *Matrix) move(coord Point, direction rune) bool {
 	delta := Directions[direction]
 	nextPos := Point{coord.x + delta.x, coord.y + delta.y}
+	currentValue := (*matrix)[coord.y][coord.x]
 	nextValue := (*matrix)[nextPos.y][nextPos.x]
 
-	if nextValue == '#' {
-		return false
-	}
-
-	if nextValue == '.' {
+	moveSelf := func() {
+		if currentValue == '@' {
+			dog = nextPos
+		}
 		(*matrix)[coord.y][coord.x] = '.'
-		(*matrix)[nextPos.y][nextPos.x] = 'O'
-		return true
+		(*matrix)[nextPos.y][nextPos.x] = currentValue
 	}
 
-	if nextValue == 'O' {
-		moved := matrix.moveBox(nextPos, direction)
-		if moved {
-			(*matrix)[coord.y][coord.x] = '.'
-			(*matrix)[nextPos.y][nextPos.x] = 'O'
+	switch nextValue {
+	case '#':
+		return false
+	case '.':
+		moveSelf()
+		return true
+	case 'O':
+		if matrix.move(nextPos, direction) {
+			moveSelf()
 			return true
 		}
 	}
@@ -109,7 +86,7 @@ func main() {
 
 	matrix, moves := readFromFile("input.txt")
 	for _, direction := range moves {
-		matrix.move(direction)
+		matrix.move(dog, direction)
 	}
 
 	fmt.Println(matrix.countCoordinates())
