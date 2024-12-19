@@ -15,6 +15,12 @@ const Height = 71
 
 var Start = Point{0, 0}
 var End = Point{Width - 1, Height - 1}
+var Directions = []Point{
+	{-1, 0},
+	{1, 0},
+	{0, 1},
+	{0, -1},
+}
 
 type Point struct {
 	x, y int
@@ -65,33 +71,6 @@ func readBytes() (bytes []Point) {
 	return
 }
 
-func adjacentEdges(src Point, matrix Matrix) []Point {
-	edges := []Point{}
-
-	directions := []Point{
-		{-1, 0},
-		{1, 0},
-		{0, 1},
-		{0, -1},
-	}
-
-	for _, direction := range directions {
-		potentialEdge := Point{src.x + direction.x, src.y + direction.y}
-
-		if potentialEdge.x < 0 || potentialEdge.y < 0 || potentialEdge.x > Width-1 || potentialEdge.y > Height-1 {
-			continue
-		}
-
-		if matrix[potentialEdge.y][potentialEdge.x] == '#' {
-			continue
-		}
-
-		edges = append(edges, potentialEdge)
-	}
-
-	return edges
-}
-
 func bfs(maze *Maze) bool {
 	root := Start
 	maze.visited[root.y][root.x] = true
@@ -104,7 +83,17 @@ func bfs(maze *Maze) bool {
 			return true
 		}
 
-		for _, edge := range adjacentEdges(value, maze.matrix) {
+		for _, direction := range Directions {
+			edge := Point{value.x + direction.x, value.y + direction.y}
+
+			if edge.x < 0 || edge.y < 0 || edge.x > Width-1 || edge.y > Height-1 {
+				continue
+			}
+
+			if maze.matrix[edge.y][edge.x] == '#' {
+				continue
+			}
+
 			if !maze.visited[edge.y][edge.x] {
 				maze.visited[edge.y][edge.x] = true
 				maze.parents[edge.y][edge.x] = value
